@@ -1,5 +1,5 @@
 const VIDEO_URL =
-  "https://raw.githubusercontent.com/LeandroCustodio2002/bad-apple-google-sheets/main/video_80_60_10fps.json";
+  "https://raw.githubusercontent.com/LeandroCustodio2002/bad-apple-google-sheets/main/data/video_80_60_10fps.json";
 
 function onOpen() {
   SpreadsheetApp.getUi()
