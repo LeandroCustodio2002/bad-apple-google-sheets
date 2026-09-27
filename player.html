@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+</head>
+<body>
+
+<button onclick="play()">
+▶ Play
+</button>
+
+<div id="status">
+Parado
+</div>
+
+<audio
+  id="music"
+  preload="auto"
+  src="https://raw.githubusercontent.com/LeandroCustodio2002/bad-apple-google-sheets/main/badApple.mp3">
+</audio>
+
+<script>
+
+let frames = [];
+let frame = 0;
+
+function play() {
+
+  const audio =
+    document.getElementById("music");
+
+  audio.currentTime = 0;
+
+  audio.play();
+
+  document
+    .getElementById("status")
+    .innerText = "Carregando...";
+
+  google.script.run
+    .withSuccessHandler(start)
+    .getFrames();
+}
+
+function start(json) {
+
+  frames = JSON.parse(json);
+
+  document
+    .getElementById("status")
+    .innerText =
+      `Frames: ${frames.length}`;
+
+  setInterval(() => {
+
+    if(frame >= frames.length){
+      return;
+    }
+
+    google.script.run
+      .renderFrame(frames[frame]);
+
+    frame++;
+
+  }, 100);
+
+}
+
+</script>
+
+</body>
+</html>
