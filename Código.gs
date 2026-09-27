@@ -34,11 +34,11 @@ function setupScreen() {
   sheet.clear();
   sheet.setHiddenGridlines(true);
 
-  const rows = 60;
-  const cols = 80;
+  const rows = 30;
+  const cols = 40;
 
-  const rowSize = 9;
-  const colSize = 12;
+  const rowSize = 18;
+  const colSize = 24;
 
   sheet.setRowHeights(1, rows, rowSize);
   sheet.setColumnWidths(1, cols, colSize);
@@ -65,4 +65,63 @@ function renderFrame(frame) {
       colors[0].length
     )
     .setBackgrounds(colors);
+}
+
+function renderChanges(changes) {
+
+  const sheet =
+    SpreadsheetApp.getActiveSheet();
+
+  const blackCells = [];
+  const whiteCells = [];
+
+  for (const change of changes) {
+
+    const row = change[0];
+    const col = change[1];
+    const pixel = change[2];
+
+    const a1 = toA1(row, col);
+
+    if (pixel === "1") {
+      blackCells.push(a1);
+    } else {
+      whiteCells.push(a1);
+    }
+  }
+
+  if (blackCells.length > 0) {
+    sheet
+      .getRangeList(blackCells)
+      .setBackground("#000000");
+  }
+
+  if (whiteCells.length > 0) {
+    sheet
+      .getRangeList(whiteCells)
+      .setBackground("#FFFFFF");
+  }
+}
+
+function toA1(row, col) {
+
+  let columnName = "";
+
+  while (col > 0) {
+
+    const remainder =
+      (col - 1) % 26;
+
+    columnName =
+      String.fromCharCode(
+        65 + remainder
+      ) + columnName;
+
+    col =
+      Math.floor(
+        (col - 1) / 26
+      );
+  }
+
+  return columnName + row;
 }

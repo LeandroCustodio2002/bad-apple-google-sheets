@@ -13,29 +13,24 @@
 Parado
 </div>
 
-<audio
-  id="music"
-  preload="auto"
-  src="https://raw.githubusercontent.com/LeandroCustodio2002/bad-apple-google-sheets/main/badApple.mp3">
-</audio>
-
 <script>
 
+const FPS = 10;
+
 let frames = [];
-let frame = 0;
+
+let playing = false;
+let rendering = false;
+
+let lastFrame = -1;
+let previousFrame = null;
+
+let startTime = 0;
 
 function play() {
 
-  const audio =
-    document.getElementById("music");
-
-  audio.currentTime = 0;
-
-  audio.play();
-
-  document
-    .getElementById("status")
-    .innerText = "Carregando...";
+  document.getElementById("status").innerText =
+    "Carregando...";
 
   google.script.run
     .withSuccessHandler(start)
@@ -46,24 +41,126 @@ function start(json) {
 
   frames = JSON.parse(json);
 
-  document
-    .getElementById("status")
-    .innerText =
-      `Frames: ${frames.length}`;
+  previousFrame = null;
+  lastFrame = -1;
 
-  setInterval(() => {
+  playing = true;
+  rendering = false;
 
-    if(frame >= frames.length){
-      return;
+  startTime = performance.now();
+
+  document.getElementById("status").innerText =
+    `Frames: ${frames.length}`;
+
+  requestAnimationFrame(updateVideo);
+}
+
+function updateVideo() {
+
+  if (!playing) {
+    return;
+  }
+
+  const elapsed =
+    (performance.now() - startTime) / 1000;
+
+  const currentFrame =
+    Math.floor(elapsed * FPS);
+
+  if (currentFrame >= frames.length) {
+
+    playing = false;
+
+    document.getElementById("status").innerText =
+      "Fim";
+
+    return;
+  }
+
+  if (
+    !rendering &&
+    currentFrame !== lastFrame
+  ) {
+
+    rendering = true;
+    lastFrame = currentFrame;
+
+    const frame =
+      frames[currentFrame];
+
+    if (previousFrame === null) {
+
+      google.script.run
+        .withSuccessHandler(() => {
+
+          rendering = false;
+
+        })
+        .withFailureHandler((err) => {
+
+          rendering = false;
+
+          console.error(err);
+
+        })
+        .renderFrame(frame);
+
+    } else {
+
+      const changes = [];
+
+      for (let r = 0; r < frame.length; r++) {
+
+        const currentRow =
+          frame[r];
+
+        const previousRow =
+          previousFrame[r];
+
+        for (
+          let c = 0;
+          c < currentRow.length;
+          c++
+        ) {
+
+          if (
+            currentRow[c] !==
+            previousRow[c]
+          ) {
+
+            changes.push([
+              r + 1,
+              c + 1,
+              currentRow[c]
+            ]);
+
+          }
+        }
+      }
+
+      document.getElementById("status").innerText =
+        `Frame ${currentFrame}/${frames.length} | Alterações: ${changes.length}`;
+
+      google.script.run
+        .withSuccessHandler(() => {
+
+          rendering = false;
+
+        })
+        .withFailureHandler((err) => {
+
+          rendering = false;
+
+          console.error(err);
+
+        })
+        .renderChanges(changes);
     }
 
-    google.script.run
-      .renderFrame(frames[frame]);
+    previousFrame = frame;
+  }
 
-    frame++;
-
-  }, 100);
-
+  requestAnimationFrame(updateVideo);
 }
 
 </script>
